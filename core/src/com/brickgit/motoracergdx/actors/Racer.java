@@ -15,6 +15,10 @@ import java.util.Iterator;
 
 public class Racer extends Actor {
 
+    public enum State {
+        NORMAL, SKIDDING, HIT
+    }
+
     private Sprite imgRacer = Assets.getRacer();
     private float speed = 5;
 
@@ -22,7 +26,7 @@ public class Racer extends Actor {
 
     private Rectangle bounds;
 
-    private boolean isSkidding = false;
+    private State state = State.NORMAL;
 
     public Racer(int x, int y, Road road) {
         setSize(imgRacer.getWidth(), imgRacer.getHeight());
@@ -31,6 +35,10 @@ public class Racer extends Actor {
         bounds = new Rectangle(getX(), getY(), getWidth(), getHeight());
 
         this.road = road;
+    }
+
+    public State getState() {
+        return state;
     }
 
     public void move(float newX) {
@@ -43,7 +51,7 @@ public class Racer extends Actor {
     }
 
     public void moveRight() {
-        if (isSkidding) return;
+        if (state != State.NORMAL) return;
         float newX = getX() + speed;
         if (newX < road.getX() + road.getWidth() - getWidth()) {
             setX(newX);
@@ -52,7 +60,7 @@ public class Racer extends Actor {
     }
 
     public void moveLeft() {
-        if (isSkidding) return;
+        if (state != State.NORMAL) return;
         float newX = getX() - speed;
         if (newX > road.getX()) {
             setX(newX);
@@ -63,25 +71,38 @@ public class Racer extends Actor {
     @Override
     public void act(float delta) {
         super.act(delta);
-        Iterator<Rectangle> it = road.getOils().iterator();
-        while (it.hasNext()) {
-            Rectangle oil = it.next();
+
+        Iterator<Rectangle> oils = road.getOils().iterator();
+        while (oils.hasNext()) {
+            Rectangle oil = oils.next();
             if (bounds.overlaps(oil)) {
-                isSkidding = true;
+                state = State.SKIDDING;
                 Timer.schedule(new Timer.Task() {
                     @Override
                     public void run() {
-                        isSkidding = false;
+                        state = State.NORMAL;
                     }
-                }, 2);
-                return;
+                }, 1);
+                break;
+            }
+        }
+
+        Iterator<Car> cars = road.getCars().iterator();
+        while (cars.hasNext()) {
+            Car car = cars.next();
+            Rectangle carBounds = car.getBounds();
+            if (bounds.overlaps(carBounds)) {
+                state = State.HIT;
+                Timer.instance().clear();
             }
         }
     }
 
     @Override
     public void draw(Batch batch, float parentAlpha) {
-        float rotation = isSkidding ? 30 : getRotation();
+        super.draw(batch, parentAlpha);
+
+        float rotation = (state == State.NORMAL) ? getRotation() : 30;
         batch.draw(
                 imgRacer, getX(), getY(),
                 getOriginX(), getOriginY(),

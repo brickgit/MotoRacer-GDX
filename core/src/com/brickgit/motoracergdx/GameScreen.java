@@ -48,18 +48,22 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        if (Gdx.input.isTouched()) {
-            Vector2 position = new Vector2(Gdx.input.getX(), Gdx.input.getY());
-            stage.getViewport().unproject(position);
-            racer.move(position.x);
-        }
 
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) racer.moveRight();
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) racer.moveLeft();
+        if (racer.getState() != Racer.State.HIT) {
+            if (Gdx.input.isTouched()) {
+                Vector2 position = new Vector2(Gdx.input.getX(), Gdx.input.getY());
+                stage.getViewport().unproject(position);
+                racer.move(position.x);
+            }
+
+            if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) racer.moveRight();
+            if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) racer.moveLeft();
+
+            stage.act(delta);
+        }
 
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        stage.act(delta);
         stage.draw();
     }
 
