@@ -2,8 +2,6 @@ package com.brickgit.motoracergdx.actors;
 
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.utils.Timer;
 import com.brickgit.motoracergdx.utils.Assets;
 
@@ -13,7 +11,7 @@ import java.util.Iterator;
  * Created by Daniel Lin on 24/04/2018.
  */
 
-public class Racer extends Actor {
+public class Racer extends BaseActor {
 
     public enum State {
         NORMAL, SKIDDING, HIT
@@ -24,16 +22,12 @@ public class Racer extends Actor {
 
     private Road road;
 
-    private Rectangle bounds;
-
     private State state = State.NORMAL;
 
     public Racer(int x, int y, Road road) {
         setSize(imgRacer.getWidth(), imgRacer.getHeight());
         setPosition(x - getWidth() / 2, y - getHeight() / 2);
-
-        bounds = new Rectangle(getX(), getY(), getWidth(), getHeight());
-
+        updateBounds();
         this.road = road;
     }
 
@@ -56,6 +50,7 @@ public class Racer extends Actor {
         if (newX < road.getX() + road.getWidth() - getWidth()) {
             setX(newX);
             bounds.x = newX;
+            updateBounds();
         }
     }
 
@@ -65,6 +60,7 @@ public class Racer extends Actor {
         if (newX > road.getX()) {
             setX(newX);
             bounds.x = newX;
+            updateBounds();
         }
     }
 
@@ -75,7 +71,7 @@ public class Racer extends Actor {
         Iterator<Oil> oils = road.getOils().iterator();
         while (oils.hasNext()) {
             Oil oil = oils.next();
-            if (bounds.overlaps(oil.getBounds())) {
+            if (hit(oil)) {
                 state = State.SKIDDING;
                 Timer.schedule(new Timer.Task() {
                     @Override
@@ -90,7 +86,7 @@ public class Racer extends Actor {
         Iterator<Car> cars = road.getCars().iterator();
         while (cars.hasNext()) {
             Car car = cars.next();
-            if (bounds.overlaps(car.getBounds())) {
+            if (hit(car)) {
                 state = State.HIT;
                 Timer.instance().clear();
             }
