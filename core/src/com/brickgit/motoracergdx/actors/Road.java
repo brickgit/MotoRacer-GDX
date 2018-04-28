@@ -2,7 +2,6 @@ package com.brickgit.motoracergdx.actors;
 
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.utils.TimeUtils;
@@ -27,9 +26,9 @@ public class Road extends Actor {
     private List<Car> cars = new LinkedList<Car>();
     private long lastCarTime = 0;
 
-    private Sprite imgOil = Assets.getOil();
-    private List<Rectangle> oils = new LinkedList<Rectangle>();
+    private List<Oil> oils = new LinkedList<Oil>();
     private long lastOilTime = 0;
+
     private Random random = new Random();
 
     private final long TWO_SECS = 2000000000l;
@@ -46,7 +45,7 @@ public class Road extends Actor {
         return cars;
     }
 
-    public List<Rectangle> getOils() {
+    public List<Oil> getOils() {
         return oils;
     }
 
@@ -54,16 +53,16 @@ public class Road extends Actor {
     public void act(float delta) {
         super.act(delta);
         update(delta);
-        updateCars(delta);
         updateOils(delta);
+        updateCars(delta);
         long now = TimeUtils.nanoTime();
-        if (now - lastCarTime >= TWO_SECS) {
-            addCar();
-            lastCarTime = now;
-        }
         if (now - lastOilTime >= TEN_SECS) {
             addOil();
             lastOilTime = now;
+        }
+        if (now - lastCarTime >= TWO_SECS) {
+            addCar();
+            lastCarTime = now;
         }
     }
 
@@ -72,7 +71,7 @@ public class Road extends Actor {
         super.draw(batch, parentAlpha);
         batch.draw(imgBackground, background1.x, background1.y, getWidth(), getHeight());
         batch.draw(imgBackground, background2.x, background2.y, getWidth(), getHeight());
-        drawOils(batch);
+        drawOils(batch, parentAlpha);
         drawCars(batch, parentAlpha);
     }
 
@@ -99,6 +98,9 @@ public class Road extends Actor {
         while (it.hasNext()) {
             Car car = it.next();
             car.act(delta);
+            if (car.getY() < -car.getHeight()) {
+                it.remove();
+            }
         }
     }
 
@@ -111,28 +113,28 @@ public class Road extends Actor {
     }
 
     private void addOil() {
-        int x = (int) getX() + random.nextInt((int) (getWidth() - imgOil.getWidth()));
-        Rectangle oil = new Rectangle(x, getHeight(), imgOil.getWidth(), imgOil.getHeight());
+        float oilWidth = Assets.getOil().getWidth();
+        int x = (int) getX() + (int) (oilWidth / 2) + random.nextInt((int) (getWidth() - oilWidth));
+        Oil oil = new Oil(x, (int) getHeight());
         oils.add(oil);
     }
 
     private void updateOils(float delta) {
-        int move = (int) (delta * speed);
-        Iterator<Rectangle> it = oils.iterator();
+        Iterator<Oil> it = oils.iterator();
         while (it.hasNext()) {
-            Rectangle oil = it.next();
-            if (oil.y < -oil.height) {
+            Oil oil = it.next();
+            oil.act(delta);
+            if (oil.getY() < -oil.getHeight()) {
                 it.remove();
             }
-            oil.y -= move;
         }
     }
 
-    private void drawOils(Batch batch) {
-        Iterator<Rectangle> it = oils.iterator();
+    private void drawOils(Batch batch, float parentAlpha) {
+        Iterator<Oil> it = oils.iterator();
         while (it.hasNext()) {
-            Rectangle oil = it.next();
-            batch.draw(imgOil, oil.x, oil.y, oil.width, oil.height);
+            Oil oil = it.next();
+            oil.draw(batch, parentAlpha);
         }
     }
 }

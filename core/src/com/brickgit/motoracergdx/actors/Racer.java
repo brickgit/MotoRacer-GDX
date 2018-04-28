@@ -72,10 +72,10 @@ public class Racer extends Actor {
     public void act(float delta) {
         super.act(delta);
 
-        Iterator<Rectangle> oils = road.getOils().iterator();
+        Iterator<Oil> oils = road.getOils().iterator();
         while (oils.hasNext()) {
-            Rectangle oil = oils.next();
-            if (bounds.overlaps(oil)) {
+            Oil oil = oils.next();
+            if (bounds.overlaps(oil.getBounds())) {
                 state = State.SKIDDING;
                 Timer.schedule(new Timer.Task() {
                     @Override
@@ -90,8 +90,7 @@ public class Racer extends Actor {
         Iterator<Car> cars = road.getCars().iterator();
         while (cars.hasNext()) {
             Car car = cars.next();
-            Rectangle carBounds = car.getBounds();
-            if (bounds.overlaps(carBounds)) {
+            if (bounds.overlaps(car.getBounds())) {
                 state = State.HIT;
                 Timer.instance().clear();
             }
